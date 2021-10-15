@@ -44,7 +44,7 @@ blake2b和compress的详细算法介绍参见官方文档；
 
 <img src="doc\compress.jpg" alt="compress" style="zoom: 25%;" />
 
-该架构中blake2b_round_a和blake2b_round_b组合实现了一个round中对v的所有转换，其中round_a实现了G0~G3，round_b实现了G4~G7，每个round_a/b模块的输出均有寄存器缓存，因此整个电路共有24级流水线；
+该架构中blake2b_round_a和blake2b_round_b组合实现了一个round中对v的所有转换，其中round_a实现了G0到G3，round_b实现了G4到G7，每个round_a/b模块的输出均有寄存器缓存，因此整个电路共有24级流水线；
 
 hm_reg模块主要由寄存器组成，为每级流水线暂存了输入的h和m; 
 
