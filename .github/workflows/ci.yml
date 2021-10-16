@@ -1,0 +1,26 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  schedule: [cron: "16 */24 * * *"]
+
+jobs:
+  build-and-simulate:
+    name: Build and Simulate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog yosys
+          # The actual shell script to build and simulate
+          #./run.sh
+      - name: Run Verible linter action
+        uses: chipsalliance/verible-linter-action@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+
