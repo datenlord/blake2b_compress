@@ -17,16 +17,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Run Verible linter action
-        uses: chipsalliance/verible-linter-action@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and Simulate
         run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog yosys
-          # The actual shell script to build and simulate
-          #./run.sh
+          ./run.sh
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
