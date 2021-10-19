@@ -19,6 +19,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build and Simulate
         run: |
+          docker pull ghcr.io/chipsalliance/verible-linter-action
+          docker pull 0x01be/iverilog
           ./run.sh
       - name: Setup tmate session
         if: ${{ failure() }}
