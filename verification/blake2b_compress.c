@@ -1,5 +1,6 @@
 #include "blake2b.h"
 #include "stdio.h"
+#include "stdlib.h"
 
 static inline uint64_t rotr64( const uint64_t w, const unsigned c )
 {
@@ -41,7 +42,7 @@ static inline uint64_t rotr64( const uint64_t w, const unsigned c )
     G(r,7,v[ 3],v[ 4],v[ 9],v[14]); \
   } while(0)
 
-static void blake2b_compress( blake2b_state *S )
+static void blake2b_compress( blake2b_state *S, FILE *ptr)
 {
   uint64_t m[16];
   uint64_t v[16];
@@ -50,9 +51,12 @@ static void blake2b_compress( blake2b_state *S )
   for( i = 0; i < 8; ++i ) {
     v[i] = S->h[i];
   }
+
+  // write m to file
   for ( i = 0; i < 16; i++)
   {
-      m[i] = i*100000;
+      m[i] = generate_rand(i);
+      fprintf(ptr,"%lx\n",m[i]);
   }
   
 
@@ -85,24 +89,44 @@ static void blake2b_compress( blake2b_state *S )
   }
 }
 
+
 int main(int argc, char const *argv[])
 {
-    blake2b_state state;
-    state.f[0] = 100000;
-    state.f[1] = 200000;
-    state.t[0] = 300000;
-    state.t[1] = 500000;
+    // generate input:f,t,h,m and write to file
+    FILE *fptr = fopen("input.txt","w"); 
 
+    blake2b_state state;
+    state.f[0] = generate_rand(0);
+    state.f[1] = generate_rand(1);
+    state.t[0] = generate_rand(2);
+    state.t[1] = generate_rand(3);
+
+    fprintf(fptr,"%lx\n",state.f[0]);
+    fprintf(fptr,"%lx\n",state.f[1]);
+    fprintf(fptr,"%lx\n",state.t[0]);
+    fprintf(fptr,"%lx\n",state.t[1]);
+
+    printf("Input h:\n");
     for (size_t i = 0; i < 8; i++)
     {
-        state.h[i] = i*100000;
+        state.h[i] = generate_rand(i);
+        printf("%lx\n",state.h[i]);
+        fprintf(fptr,"%lx\n",state.h[i]);
     }
+    printf("\n");
     
-    blake2b_compress(&state);
+    blake2b_compress(&state,fptr);
+    fclose(fptr);
 
+    // write output result to file
+    FILE *fptr2 = fopen("output.txt","w");
+    printf("Output h:\n");
     for (size_t j = 0; j < 8; j++)
     {
-        printf("%lx\n",state.h[j]);
+      printf("%lx\n",state.h[j]);
+      fprintf(fptr2,"%lx\n",state.h[j]);
     }
+    fclose(fptr2);
     return 0;
-}
+  }
+
