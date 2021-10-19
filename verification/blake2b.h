@@ -1,5 +1,8 @@
   #include "stdint.h"
   #include "stddef.h"
+  #include "stdlib.h"
+  #include "time.h"
+  #include "stdio.h"
   typedef struct blake2b_state__
   {
     uint64_t h[8];
@@ -34,5 +37,20 @@ static const uint8_t blake2b_sigma[12][16] =
   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 } ,
   { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 }
 };
+
+uint64_t generate_rand(uint8_t seed)
+{
+  uint8_t rand_8;
+  uint64_t res = 1;
+  for (size_t i = 0; i < 8; i++)
+  {
+    srand((unsigned)time(0)*(i+1)*(seed+1));
+    rand_8 = rand()%256;
+    //printf("%d\n",rand_8);
+    res = res * rand_8;
+  }
+  return res;
+}
+
 
 

@@ -2,137 +2,147 @@
 `include "blake2b_compress.v"
 
 //~ `New testbench
-`timescale  1ns / 1ps
+`timescale 1ns / 1ps
 
-module testbench (
-    
-    );
+module testbench ();
 
-    reg clk = 0, rst = 1;
+  // standard input and output from files
+  reg [`WORD_BUS] standard_input [28];
+  reg [`WORD_BUS] standard_output[ 8];
 
-    reg [`Word_Bus] h [ 7:0];
-    reg [`Word_Bus] m [15:0];
-    reg [`Word_Bus] t [ 1:0];
-    reg [`Word_Bus] f [ 1:0];
+  initial begin
+    $readmemh("./input.txt", standard_input, 0, 27);
+    $readmemh("./output.txt", standard_output, 0, 7);
+  end
 
-    wire [ 8*`Word_Width-1 : 0] h_temp;
-    wire [16*`Word_Width-1 : 0] m_temp;
-    wire [ 2*`Word_Width-1 : 0] t_temp;
-    wire [ 2*`Word_Width-1 : 0] f_temp;
+  reg clk = 0, rst = 1;
 
-    wire [ 8*`Word_Width-1 : 0] h_o;
-    wire [`Word_Bus] h_o_temp [ 7:0];
+  reg [`WORD_BUS] h[8];
+  reg [`WORD_BUS] m[16];
+  reg [`WORD_BUS] t[2];
+  reg [`WORD_BUS] f[2];
 
+  wire [8*`WORD_WIDTH-1 : 0] h_temp;
+  wire [16*`WORD_WIDTH-1 : 0] m_temp;
+  wire [2*`WORD_WIDTH-1 : 0] t_temp;
+  wire [2*`WORD_WIDTH-1 : 0] f_temp;
 
-    genvar i;
-    generate
-        for ( i = 0; i<16 ;i=i+1 ) begin
-            assign m_temp[`Word_Width*(i+1)-1:`Word_Width*i] = m[i];
-        end
-        for ( i = 0; i<8 ;i=i+1 ) begin
-            assign h_temp[`Word_Width*(i+1)-1:`Word_Width*i] = h[i];
-            assign h_o_temp[i] = h_o[`Word_Width*(i+1)-1:`Word_Width*i];
-        end
-        for ( i = 0; i<2 ;i=i+1 ) begin
-            assign t_temp[`Word_Width*(i+1)-1:`Word_Width*i] = t[i];
-            assign f_temp[`Word_Width*(i+1)-1:`Word_Width*i] = f[i];
-
-        end
-    endgenerate
+  wire [8*`WORD_WIDTH-1 : 0] h_o;
+  wire [`WORD_BUS] h_o_temp[8];
 
 
-    parameter period = 10;
-    initial begin
-        clk = 0;
-        forever #(period/2) clk = ~clk;
+
+  for (genvar i = 0; i < 16; i = i + 1) begin : gen_m_temp
+    assign m_temp[`WORD_WIDTH*(i+1)-1:`WORD_WIDTH*i] = m[i];
+  end
+  for (genvar i = 0; i < 8; i = i + 1) begin : gen_h_temp
+    assign h_temp[`WORD_WIDTH*(i+1)-1:`WORD_WIDTH*i] = h[i];
+    assign h_o_temp[i] = h_o[`WORD_WIDTH*(i+1)-1:`WORD_WIDTH*i];
+  end
+  for (genvar i = 0; i < 2; i = i + 1) begin : gen_t_temp
+    assign t_temp[`WORD_WIDTH*(i+1)-1:`WORD_WIDTH*i] = t[i];
+    assign f_temp[`WORD_WIDTH*(i+1)-1:`WORD_WIDTH*i] = f[i];
+
+  end
+
+
+
+  // generate clk signal
+  localparam reg PERIOD = 10;
+  initial begin
+    clk = 0;
+    forever #(PERIOD / 2) clk = ~clk;
+  end
+
+  // generate rst signal
+  initial begin
+    #PERIOD rst = 0;
+  end
+
+  // generate input signals to target module
+  always @(posedge clk) begin
+    if (rst == `RST_ENABLE) begin
+      f[0] <= 0;
+      f[1] <= 0;
+      t[0] <= 0;
+      t[1] <= 0;
+
+    end else begin
+      f[0] <= standard_input[0];
+      f[1] <= standard_input[1];
+      t[0] <= standard_input[2];
+      t[1] <= standard_input[3];
     end
+  end
 
-    initial begin
-        #period rst = 0;
+  always @(posedge clk) begin
+    if (rst == `RST_ENABLE) begin
+      h[0] <= 0;
+      h[1] <= 0;
+      h[2] <= 0;
+      h[3] <= 0;
+      h[4] <= 0;
+      h[5] <= 0;
+      h[6] <= 0;
+      h[7] <= 0;
+    end else begin
+      h[0] <= standard_input[4];
+      h[1] <= standard_input[5];
+      h[2] <= standard_input[6];
+      h[3] <= standard_input[7];
+      h[4] <= standard_input[8];
+      h[5] <= standard_input[9];
+      h[6] <= standard_input[10];
+      h[7] <= standard_input[11];
     end
+  end
 
-
-    always @(posedge clk) begin
-        if(rst == `RstEnable) begin
-            h[0] <= 0;
-            h[1] <= 0;
-            h[2] <= 0;
-            h[3] <= 0;
-            h[4] <= 0;
-            h[5] <= 0;
-            h[6] <= 0;
-            h[7] <= 0;
-        end
-        else begin
-            h[0] <= 0;
-            h[1] <= 100000;
-            h[2] <= 200000;
-            h[3] <= 300000;
-            h[4] <= 400000;
-            h[5] <= 500000;
-            h[6] <= 600000;
-            h[7] <= 700000;
-        end
+  integer j = 0;
+  always @(posedge clk) begin
+    if (rst == `RST_ENABLE) begin
+      for (j = 0; j < 16; j = j + 1) begin
+        m[j] <= 0;
+      end
+    end else begin
+      for (j = 0; j < 16; j = j + 1) begin
+        m[j] <= standard_input[12+j];
+      end
     end
-    always @(posedge clk) begin
-        if(rst == `RstEnable) begin
-            f[0] <= 0;
-            f[1] <= 0;           
-            t[0] <= 0;
-            t[1] <= 0;
+  end
 
-        end
-        else begin
-            f[0] <= 100000;
-            f[1] <= 200000;
-            t[0] <= 300000;
-            t[1] <= 500000;
-        end
+
+  // instantiate the target module
+  blake2b_compress blake2b_compress_inst (
+      .clk_i(clk),
+      .rst_i(rst),
+
+      //input signals
+      .h_i(h_temp),
+      .m_i(m_temp),
+      .t_i(t_temp),
+      .f_i(f_temp),
+
+      //output signals
+      .h_o(h_o)
+  );
+
+
+  initial begin
+    #1000;
+    $display("The output h of blake2b_compress module:");
+    for (j = 0; j < 8; j = j + 1) begin
+      if (h_o_temp[j] != standard_output[j]) begin
+        $error("The output h[%c]of target module is wrong!!", j + 48);
+        $finish();
+      end
     end
+    $display("Test Case Passed!!!\n");
+    $finish;
+  end
 
-    integer j=0;
-        always @(posedge clk) begin
-        if(rst == `RstEnable) begin
-            for (j = 0; j<16 ;j=j+1 ) begin
-                m[j] <= 0;
-            end
-        end
-        else begin
-            for (j = 0; j<16 ;j=j+1 ) begin
-                m[j] <= j*100000;
-            end
-        end
-    end
+  initial begin
+    $dumpfile("wave.vcd");  // create wave file
+    $dumpvars;  // dump all vars
+  end
 
-
-
-    blake2b_compress blake2b_compress_inst(
-        .clk(clk),
-        .rst(rst),
-
-    //input signals
-        .h_i(h_temp),
-        .m_i(m_temp),
-        .t_i(t_temp),
-        .f_i(f_temp),
-
-    //output signals
-        .h_o(h_o)
-    );
-    
-    
-    initial begin
-        #1000;
-        
-        for (j = 0;j<8 ;j=j+1 ) begin
-            $display("%h",h_o_temp[j]);
-        end
-        $finish;
-    end
-
-    initial begin
-        $dumpfile("wave.vcd"); // 指定用作dumpfile的文件
-		$dumpvars; // dump all vars
-	end
-
-endmodule //testbench
+endmodule  //testbench

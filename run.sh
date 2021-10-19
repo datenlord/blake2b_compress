@@ -1,6 +1,6 @@
 #! /bin/sh
 
-#set -o errexit # TODO: enable this check
+set -o errexit
 set -o nounset
 set -o xtrace
 
@@ -11,11 +11,18 @@ git diff --exit-code # Fail if any format change
 # Lint check
 docker run --rm -v `pwd`:`pwd` -w `pwd` --entrypoint verible-verilog-lint ghcr.io/chipsalliance/verible-linter-action --ruleset=all --show_diagnostic_context $FILE_LIST
 
+# Build and Simulate
+VERI_DIR=verification
 BUILD_DIR=build
 SIM_ELF=a.out
 SIM_ELF_PATH=$BUILD_DIR/$SIM_ELF
 mkdir -p $BUILD_DIR
 docker run --rm -v `pwd`:`pwd` -w `pwd` -u root 0x01be/iverilog iverilog -g2012 -o $SIM_ELF_PATH -I ./src ./src/testbench.v
+
 cd $BUILD_DIR
+echo "generating random test case ......"
+gcc ../$VERI_DIR/blake2b_compress.c -o blake2b_compress
+./blake2b_compress
+echo "Simulating ......"
 docker run --rm -v `pwd`:`pwd` -w `pwd` -u root 0x01be/iverilog ./$SIM_ELF
 
