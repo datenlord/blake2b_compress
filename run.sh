@@ -4,12 +4,10 @@
 set -o nounset
 set -o xtrace
 
-docker pull ghcr.io/chipsalliance/verible-linter-action
-docker pull 0x01be/iverilog
-
 FILE_LIST=`find ./src -name "*v"`
 # Format check
 docker run --rm -v `pwd`:`pwd` -w `pwd` --entrypoint verible-verilog-format ghcr.io/chipsalliance/verible-linter-action --failsafe_success=false --inplace --verbose $FILE_LIST
+git diff --exit-code # Fail if any format change
 # Lint check
 docker run --rm -v `pwd`:`pwd` -w `pwd` --entrypoint verible-verilog-lint ghcr.io/chipsalliance/verible-linter-action --ruleset=all --show_diagnostic_context $FILE_LIST
 
